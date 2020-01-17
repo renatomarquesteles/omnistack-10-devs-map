@@ -8,6 +8,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 
 import api from '../../services/api';
+import { connect, disconnect, subscribeToNewDevs } from '../../services/socket';
 
 import {
   Map,
@@ -70,8 +71,20 @@ export default function Main({ navigation }) {
     loadInitialPosition();
   }, []);
 
+  useEffect(() => {
+    subscribeToNewDevs(dev => setDevs([...devs, dev]));
+  }, [devs]);
+
   function handleRegionChange(region) {
     setCurrentRegion(region);
+  }
+
+  function setupWebSocket() {
+    disconnect();
+
+    const { latitude, longitude } = currentRegion;
+
+    connect(latitude, longitude, techs);
   }
 
   async function loadDevs() {
@@ -86,6 +99,7 @@ export default function Main({ navigation }) {
     });
 
     setDevs(response.data);
+    setupWebSocket();
   }
 
   if (!currentRegion) {
